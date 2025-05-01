@@ -4,6 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+def tomarMuestra():
+    muestra = int(input("Ingresar tamaño de la muestra: "))
+
+    # Validar que la muestra sea menor o igual a 1 millon
+    if muestra > 1000000:
+        muestra = int(input("Ingresar muestra menor o igual a 1 millon: "))
+    return muestra
+
 def mostrarRandoms(randoms):
     mostrar = input("¿Desea mostrar los numeros aleatorios generados? (s/n): ").lower()
     if mostrar == "s":
@@ -55,10 +63,7 @@ def frecuencia(opcion):
 
 def uniforme():
 
-    muestra = int(input("Ingresar tamaño de la muestra: "))
-
-    if muestra > 1000000:
-        muestra = int(input("Ingresar muestra menor o igual a 1 millon: "))
+    muestra = tomarMuestra()
 
     a = float(input("Ingrese el valor de a para la distribución uniforme[a,b]: "))
     b = float(input("Ingrese el valor de b para la distribución uniforme[a,b]: "))
@@ -68,7 +73,8 @@ def uniforme():
     cantidad = int(input("Ingrese su eleccion: "))
 
     intervalos = frecuencia(cantidad)
-
+    
+    # Generar randoms uniformes [a,b]
     randoms = []
     for i in range (muestra):
         rnd = random.random()
@@ -88,10 +94,7 @@ def uniforme():
 
 def exponencial():
 
-    muestra = int(input("Ingresar tamaño de la muestra: "))
-
-    if muestra > 1000000:
-        muestra = int(input("Ingresar muestra menor o igual a 1 millon: "))
+    muestra = tomarMuestra()
 
     lambda_val = float(input("Ingrese el valor de λ para la distribución exponencial: "))
 
@@ -100,6 +103,7 @@ def exponencial():
 
     intervalos = frecuencia(cantidad)
 
+    #Generar randoms dist exponencial negativa
     randoms = []
     for i in range (muestra):
         rnd = random.random()
@@ -117,11 +121,7 @@ def exponencial():
 
 def normal():
 
-    muestra = int(input("Ingresar tamaño de la muestra: "))
-
-    if muestra > 1000000:
-        muestra = int(input("Ingresar muestra menor o igual a 1 millon: "))
-
+    muestra = tomarMuestra()
 
     print(frecuencias)
     cantidad = int(input("Ingrese su eleccion: "))
@@ -131,12 +131,16 @@ def normal():
     media_val = float(input("Ingrese el valor de μ para la distribución normal: "))
     desv_val = float(input("Ingrese el valor de σ para la distribución normal: "))
 
+    # Generar Randoms dist Normal (Método de Box-Muller)
     randoms = []
     for i in range (muestra):
+        # Generamos dos RND
         u1 = random.random()
         u2 = random.random()
+        # Aplicamos el método de Box-Muller generando n1 y n2
         n1 = (math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)) * desv_val + media_val
         n2 = (math.sqrt(-2 * math.log(u1)) * math.sin(2 * math.pi * u2)) * desv_val + media_val
+
         randoms.append(round(n1, 4))
         randoms.append(round(n2, 4))
 
