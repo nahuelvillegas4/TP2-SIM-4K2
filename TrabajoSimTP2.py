@@ -133,16 +133,19 @@ def normal():
 
     # Generar Randoms dist Normal (Método de Box-Muller)
     randoms = []
-    for i in range (muestra):
-        # Generamos dos RND
+    while len(randoms) < muestra:
+        # Generar dos rnd
         u1 = random.random()
         u2 = random.random()
-        # Aplicamos el método de Box-Muller generando n1 y n2
+        
+        # Aplicar Box-Muller
         n1 = (math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)) * desv_val + media_val
         n2 = (math.sqrt(-2 * math.log(u1)) * math.sin(2 * math.pi * u2)) * desv_val + media_val
 
-        randoms.append(round(n1, 4))
-        randoms.append(round(n2, 4))
+        # Agregar a la lista de randoms
+        randoms.append(round(n1,4))
+        if len(randoms) < muestra:
+            randoms.append(round(n2,4))
 
     # Randoms generados (opcional)
     mostrarRandoms(randoms)
