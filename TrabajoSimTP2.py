@@ -4,36 +4,104 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-def tomarMuestra():
-    muestra = int(input("Ingresar tamaño de la muestra: "))
+# === MENÚS ===
+menu = (
+    "Seleccionar distribución, marque el número de la opción a la que desea ingresar desde su teclado:\n"
+    "Marque 1 en el teclado: Trabajar con una Distribución Uniforme [a,b]\n"
+    "Marque 2 en el teclado: Trabajar con una Distribución Exponencial\n"
+    "Marque 3 en el teclado: Trabajar con una Distribución Normal\n"
+    "Marque 0 en el teclado: Si desea salir al menú principal\n"
+    "De marcar una opción distinta, se le volverá a preguntar por la distribución con la cual desea trabajar."
+)
 
-    # Validar que la muestra sea menor o igual a 1 millon
-    if muestra > 1000000:
-        muestra = int(input("Ingresar muestra menor o igual a 1 millon: "))
-    return muestra
+frecuencias = (
+    "Seleccionar cantidad de intervalos, marque la opción de acuerdo a la cantidad de intervalos con los que desea trabajar:\n"
+    "Marque 1 en el teclado: 10 intervalos\n"
+    "Marque 2 en el teclado: 15 intervalos\n"
+    "Marque 3 en el teclado: 20 intervalos\n"
+    "Marque 4 en el teclado: 25 intervalos\n"
+    "Marque 0 en el teclado: Si desea salir al menú principal\n"
+    "De marcar una opción distinta, se le volverá a preguntar por la cantidad de intervalos."
+)
+
+
+# === FUNCIONES AUXILIARES ===
+def validar_opcion_menu():
+    while True:
+        try:
+            opcion = int(input("Ingrese su selección: "))
+            if 0 <= opcion <= 3:
+                return opcion
+            else:
+                print("Opción inválida. Por favor, marque un número entre 0 y 3.")
+        except ValueError:
+            print("Debe ingresar un número válido.")
+
+
+def validar_cantidad_intervalos():
+    while True:
+        try:
+            cantidad = int(input("Ingrese su elección: "))
+            if cantidad == 0:
+                print("Regresando al menú principal...")
+                return None
+            elif 1 <= cantidad <= 4:
+                return cantidad
+            else:
+                print("Opción inválida. Por favor, marque un número entre 1 y 4.")
+        except ValueError:
+            print("Debe ingresar un número válido.")
+
+
+def frecuencia(opcion):
+    match opcion:
+        case 1:
+            return 10
+        case 2:
+            return 15
+        case 3:
+            return 20
+        case 4:
+            return 25
+        case _:
+            print("Opción no válida. Se usará 10 intervalos por defecto.")
+            return 10
+
+
+# === FUNCIONES DE GENERACIÓN ===
+def tomarMuestra():
+    while True:
+        try:
+            muestra = int(input("Ingresar tamaño de la muestra: "))
+            if muestra > 1_000_000:
+                print("Tamaño máximo permitido: 1 millón.")
+            elif muestra <= 0:
+                print("Debe ingresar un número positivo.")
+            else:
+                return muestra
+        except ValueError:
+            print("Debe ingresar un número entero válido.")
+
 
 def mostrarRandoms(randoms):
-    mostrar = input("¿Desea mostrar los numeros aleatorios generados? (s/n): ").lower()
+    mostrar = input("¿Desea mostrar los números aleatorios generados? (s/n): ").lower()
     if mostrar == "s":
-        print("Numeros aleatorios generados:")
+        print("Números aleatorios generados:")
         for i in range(len(randoms)):
-            print(f"{i+1}: {randoms[i]}")
+            print(f"{i + 1}: {randoms[i]}")
         print("-----------------------------------")
+
 
 def mostrarTablaFrecuencias(randoms, intervalos):
     frec, bordes = np.histogram(randoms, bins=intervalos)
-    inter = [f"{round(bordes[i], 4)} - {round(bordes[i+1], 4)}" for i in range(len(bordes)-1)]
-
-    tabla = pd.DataFrame({
-        'Intervalo': inter,
-        'Frecuencia': frec
-    })
-
+    inter = [f"{round(bordes[i], 4)} - {round(bordes[i + 1], 4)}" for i in range(len(bordes) - 1)]
+    tabla = pd.DataFrame({'Intervalo': inter, 'Frecuencia': frec})
     print(tabla)
     print("-----------------------------------")
 
+
 def mostrarHistograma(randoms, intervalos):
-    plt.hist(randoms, bins=intervalos, edgecolor='black')
+    plt.hist(randoms, bins=intervalos, edgecolor='black', density=True)
     plt.title("Histograma")
     plt.xlabel("Intervalos")
     plt.ylabel("Frecuencia")
@@ -41,146 +109,101 @@ def mostrarHistograma(randoms, intervalos):
     plt.show()
 
 
-# Trabajo Practico 2 - Generacion de numeros aleatorios
-print("TP2 generacion de numeros aleatorios")
-
-opcion = -1
-intervalos = 0
-
-def frecuencia(opcion):
-    match opcion:
-        case 1:
-           return 10
-        
-        case 2:
-            return 15
-        
-        case 3:
-            return 20
-        
-        case 4:
-            return 25
-
+# === DISTRIBUCIÓN UNIFORME ===
 def uniforme():
-
+    print("\n--- Distribución Uniforme [a,b] ---")
     muestra = tomarMuestra()
 
-    a = float(input("Ingrese el valor de a para la distribución uniforme[a,b]: "))
-    b = float(input("Ingrese el valor de b para la distribución uniforme[a,b]: "))
-
+    a = float(input("Ingrese el valor de a para la distribución uniforme [a,b]: "))
+    b = float(input("Ingrese el valor de b para la distribución uniforme [a,b]: "))
 
     print(frecuencias)
-    cantidad = int(input("Ingrese su eleccion: "))
+    cantidad = validar_cantidad_intervalos()
+    if cantidad is None:
+        return  # Volver al menú principal
 
     intervalos = frecuencia(cantidad)
-    
-    # Generar randoms uniformes [a,b]
-    randoms = []
-    for i in range (muestra):
-        rnd = random.random()
-        x = a + (b-a)*rnd
-        randoms.append(round(x,4))
 
-    # Randoms generados (opcional)
+    randoms = [round(a + (b - a) * random.random(), 4) for _ in range(muestra)]
+
     mostrarRandoms(randoms)
-
-    # Tabla de frecuencias
     mostrarTablaFrecuencias(randoms, intervalos)
-
-    # Histograma
     mostrarHistograma(randoms, intervalos)
 
 
-
+# === DISTRIBUCIÓN EXPONENCIAL ===
 def exponencial():
-
+    print("\n--- Distribución Exponencial ---")
     muestra = tomarMuestra()
 
-    lambda_val = float(input("Ingrese el valor de λ para la distribución exponencial: "))
+    lambda_val = float(input("Ingrese el valor de λ (lambda) para la distribución exponencial: "))
 
     print(frecuencias)
-    cantidad = int(input("Ingrese su eleccion: "))
+    cantidad = validar_cantidad_intervalos()
+    if cantidad is None:
+        return  # Volver al menú principal
 
     intervalos = frecuencia(cantidad)
 
-    #Generar randoms dist exponencial negativa
     randoms = []
-    for i in range (muestra):
+    for _ in range(muestra):
         rnd = random.random()
-        x = -math.log(1-rnd) / lambda_val
-        randoms.append(round(x,4))
+        x = -math.log(1 - rnd) / lambda_val
+        randoms.append(round(x, 4))
 
-    # Randoms generados (opcional)
     mostrarRandoms(randoms)
-
-    # Tabla de frecuencias
     mostrarTablaFrecuencias(randoms, intervalos)
-
-    # Histograma
     mostrarHistograma(randoms, intervalos)
 
-def normal():
 
+# === DISTRIBUCIÓN NORMAL (Box-Muller) ===
+def normal():
+    print("\n--- Distribución Normal (Box-Muller) ---")
     muestra = tomarMuestra()
 
+    media_val = float(input("Ingrese el valor de μ (mu) para la distribución normal: "))
+    desv_val = float(input("Ingrese el valor de σ (sigma) para la distribución normal: "))
+
     print(frecuencias)
-    cantidad = int(input("Ingrese su eleccion: "))
+    cantidad = validar_cantidad_intervalos()
+    if cantidad is None:
+        return  # Volver al menú principal
 
     intervalos = frecuencia(cantidad)
 
-    media_val = float(input("Ingrese el valor de μ para la distribución normal: "))
-    desv_val = float(input("Ingrese el valor de σ para la distribución normal: "))
-
-    # Generar Randoms dist Normal (Método de Box-Muller)
     randoms = []
     while len(randoms) < muestra:
-        # Generar dos rnd
         u1 = random.random()
         u2 = random.random()
-        
-        # Aplicar Box-Muller
-        n1 = (math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)) * desv_val + media_val
-        n2 = (math.sqrt(-2 * math.log(u1)) * math.sin(2 * math.pi * u2)) * desv_val + media_val
 
-        # Agregar a la lista de randoms
-        randoms.append(round(n1,4))
+        n1 = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
+        n2 = math.sqrt(-2 * math.log(u1)) * math.sin(2 * math.pi * u2)
+
+        # Aplicar media y desviación
+        n1 = round(n1 * desv_val + media_val, 4)
+        n2 = round(n2 * desv_val + media_val, 4)
+
+        randoms.append(n1)
         if len(randoms) < muestra:
-            randoms.append(round(n2,4))
+            randoms.append(n2)
 
-    # Randoms generados (opcional)
     mostrarRandoms(randoms)
-
-    # Tabla de frecuencias
     mostrarTablaFrecuencias(randoms, intervalos)
-
-    # Histograma
     mostrarHistograma(randoms, intervalos)
 
-menu = " Seleccionar distribucion: \n" \
-"       1 - Uniforme [a,b] \n" \
-"       2 - exponencial \n" \
-"       3 - normal \n" \
-"       0 - salir"
 
-frecuencias = " Seleccionar cantidad de intervalos: \n" \
-"               1 - 10 \n" \
-"               2 - 15 \n" \
-"               3 - 20 \n" \
-"               4 - 25"
-
-while opcion != 0:
-    
+# === BUCLE PRINCIPAL ===
+while True:
     print(menu)
-
-    opcion = int(input("Ingrese su seleccion: "))
+    opcion = validar_opcion_menu()
 
     match opcion:
+        case 0:
+            print("Saliendo del programa. ¡Hasta pronto!")
+            break
         case 1:
             uniforme()
-        
         case 2:
             exponencial()
-        
         case 3:
             normal()
-        
