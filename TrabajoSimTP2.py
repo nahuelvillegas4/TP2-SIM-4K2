@@ -3,6 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.stats import chi2, uniform as uniform_dist, expon as expon_dist, norm as norm_dist
 
 # === MENÚS ===
 menu = (
@@ -49,6 +50,14 @@ def validar_cantidad_intervalos():
                 return cantidad
             else:
                 print("Opción inválida. Por favor, marque un número entre 1 y 4.")
+        except ValueError:
+            print("Debe ingresar un número válido.")
+
+def validar_numero(texto_input):
+    while True:
+        try:
+            x = float(input(texto_input))
+            return x
         except ValueError:
             print("Debe ingresar un número válido.")
 
@@ -114,8 +123,10 @@ def uniforme():
     print("\n--- Distribución Uniforme [a,b] ---")
     muestra = tomarMuestra()
 
-    a = float(input("Ingrese el valor de a para la distribución uniforme [a,b]: "))
-    b = float(input("Ingrese el valor de b para la distribución uniforme [a,b]: "))
+    a = validar_numero("Ingrese el valor de a para la distribución uniforme [a,b]: ")
+
+    b = validar_numero("Ingrese el valor de b para la distribución uniforme [a,b]: ")
+
 
     print(frecuencias)
     cantidad = validar_cantidad_intervalos()
@@ -126,8 +137,12 @@ def uniforme():
 
     randoms = [round(a + (b - a) * random.random(), 4) for _ in range(muestra)]
 
+    realizar_chi = input("¿Desea realizar prueba Chi-cuadrado? (s/n): ").lower()
+
     mostrarRandoms(randoms)
     mostrarTablaFrecuencias(randoms, intervalos)
+    if realizar_chi == "s":
+        prueba_chi_cuadrado(randoms, intervalos, "uniforme", (a, b))
     mostrarHistograma(randoms, intervalos)
 
 
@@ -136,8 +151,8 @@ def exponencial():
     print("\n--- Distribución Exponencial ---")
     muestra = tomarMuestra()
 
-    lambda_val = float(input("Ingrese el valor de λ (lambda) para la distribución exponencial: "))
-
+    lambda_val = validar_numero("Ingrese el valor de λ (lambda) para la distribución exponencial: ")
+    
     print(frecuencias)
     cantidad = validar_cantidad_intervalos()
     if cantidad is None:
@@ -151,8 +166,12 @@ def exponencial():
         x = -math.log(1 - rnd) / lambda_val
         randoms.append(round(x, 4))
 
+    realizar_chi = input("¿Desea realizar prueba Chi-cuadrado? (s/n): ").lower()
+
     mostrarRandoms(randoms)
     mostrarTablaFrecuencias(randoms, intervalos)
+    if realizar_chi == "s":
+        prueba_chi_cuadrado(randoms, intervalos, "exponencial", ([lambda_val]))
     mostrarHistograma(randoms, intervalos)
 
 
@@ -161,8 +180,9 @@ def normal():
     print("\n--- Distribución Normal (Box-Muller) ---")
     muestra = tomarMuestra()
 
-    media_val = float(input("Ingrese el valor de μ (mu) para la distribución normal: "))
-    desv_val = float(input("Ingrese el valor de σ (sigma) para la distribución normal: "))
+    media_val = validar_numero("Ingrese el valor de μ (mu) para la distribución normal: ")
+
+    desv_val = validar_numero("Ingrese el valor de σ (sigma) para la distribución normal: ")
 
     print(frecuencias)
     cantidad = validar_cantidad_intervalos()
@@ -186,11 +206,53 @@ def normal():
         randoms.append(n1)
         if len(randoms) < muestra:
             randoms.append(n2)
+    
+    realizar_chi = input("¿Desea realizar prueba Chi-cuadrado? (s/n): ").lower()
 
     mostrarRandoms(randoms)
     mostrarTablaFrecuencias(randoms, intervalos)
+    if realizar_chi == "s":
+        prueba_chi_cuadrado(randoms, intervalos, "normal", (media_val, desv_val)) 
     mostrarHistograma(randoms, intervalos)
 
+
+# === PRUEBA DE BONDAD ===
+def prueba_chi_cuadrado(randoms, intervalos, tipo, params):
+    print("Realizando prueba de bondad Chi-cuadrado...")
+
+    frec_obs, bordes = np.histogram(randoms, bins=intervalos)
+    frec_esp = []
+
+    for i in range(len(bordes) - 1):
+        a, b = bordes[i], bordes[i + 1]
+
+        match tipo:
+            case "uniforme":
+                a_, b_ = params
+                prob = uniform_dist.cdf(b, loc=a_, scale=b_ - a_) - uniform_dist.cdf(a, loc=a_, scale=b_ - a_)
+            case "exponencial":
+                λ = params[0]
+                prob = expon_dist.cdf(b, scale=1 / λ) - expon_dist.cdf(a, scale=1 / λ)
+            case "normal":
+                μ, σ = params
+                prob = norm_dist.cdf(b, loc=μ, scale=σ) - norm_dist.cdf(a, loc=μ, scale=σ)
+            case _:
+                print("Distribución no soportada.")
+                return
+
+        frec_esp.append(prob * len(randoms))
+
+    chi_stat = sum((o - e) ** 2 / e for o, e in zip(frec_obs, frec_esp) if e > 0)
+    grados_libertad = intervalos - 1 - len(params)
+    valor_critico = chi2.ppf(0.95, df=grados_libertad)
+
+    print(f"Chi-cuadrado calculado: {chi_stat:.4f}")
+    print(f"Valor crítico (α=0.05, gl={grados_libertad}): {valor_critico:.4f}")
+    if chi_stat < valor_critico:
+        print("✅ No se rechaza H0: Los datos siguen la distribución teórica.")
+    else:
+        print("❌ Se rechaza H0: Los datos no siguen la distribución teórica.")
+    print("-----------------------------------")
 
 # === BUCLE PRINCIPAL ===
 while True:
