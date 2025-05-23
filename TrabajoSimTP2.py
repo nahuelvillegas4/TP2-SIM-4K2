@@ -220,16 +220,16 @@ def normal():
 def prueba_chi_cuadrado(randoms, intervalos, tipo, params):
     print("Realizando prueba de bondad Chi-cuadrado...")
 
-    frec_obs, bordes = np.histogram(randoms, bins=intervalos)
+    frec_obs, bordes = np.histogram(randoms, bins=intervalos) #Division de los datos random en intervalos que devuelve las frecuencias_obs de cada intervalo y sus bordes
     frec_esp = []
 
     for i in range(len(bordes) - 1):
-        a, b = bordes[i], bordes[i + 1]
+        a, b = bordes[i], bordes[i + 1] #Utilizando los bordes generados calculamos las frecuencias esperadas
 
         match tipo:
             case "uniforme":
                 a_, b_ = params
-                prob = uniform_dist.cdf(b, loc=a_, scale=b_ - a_) - uniform_dist.cdf(a, loc=a_, scale=b_ - a_)
+                prob = uniform_dist.cdf(b, loc=a_, scale=b_ - a_) - uniform_dist.cdf(a, loc=a_, scale=b_ - a_) #Funcion que realiza el calculo de la probabilidad teorica en base a una distribucion uniforme
             case "exponencial":
                 λ = params[0]
                 prob = expon_dist.cdf(b, scale=1 / λ) - expon_dist.cdf(a, scale=1 / λ)
@@ -242,7 +242,7 @@ def prueba_chi_cuadrado(randoms, intervalos, tipo, params):
 
         frec_esp.append(prob * len(randoms))
 
-    chi_stat = sum((o - e) ** 2 / e for o, e in zip(frec_obs, frec_esp) if e > 0)
+    chi_stat = sum((o - e) ** 2 / e for o, e in zip(frec_obs, frec_esp) if e > 0) #Calculo del chi estadistico
     grados_libertad = intervalos - 1 - len(params)
     valor_critico = chi2.ppf(0.95, df=grados_libertad)
 
